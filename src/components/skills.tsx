@@ -592,12 +592,6 @@ export default function SkillsSection() {
             </div>
           </div>
 
-          <div className="mt-8 text-center text-gray-600">
-            <p>
-              This radar chart visualizes my skill proficiency across different categories. Hover over skill bars for
-              detailed information.
-            </p>
-          </div>
         </motion.div>
       </div>
     </section>

@@ -11,7 +11,6 @@ import {
   MapPin,
   Linkedin,
   Github,
-  Twitter,
   Send,
   Cog,
   Zap,
@@ -299,7 +298,7 @@ export default function ContactSection() {
                   <h4 className="text-sm font-semibold text-gray-500 mb-3">Social Profiles</h4>
                   <div className="flex space-x-4">
                     <a
-                      href="https://linkedin.com/in/shantanupanda"
+                      href="https://www.linkedin.com/in/shantanu-panda-ba4542238/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-blue-50/[0.8] p-3 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors"
@@ -307,20 +306,12 @@ export default function ContactSection() {
                       <Linkedin className="w-5 h-5" />
                     </a>
                     <a
-                      href="https://github.com/shantanupanda"
+                      href="https://github.com/shantanu-panda"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-50/[0.8] p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <Github className="w-5 h-5" />
-                    </a>
-                    <a
-                      href="https://twitter.com/shantanupanda"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-50/[0.8] p-3 rounded-lg text-blue-400 hover:bg-blue-100 transition-colors"
-                    >
-                      <Twitter className="w-5 h-5" />
                     </a>
                   </div>
                 </motion.div>

@@ -434,46 +434,25 @@ const AboutSection: React.FC = () => {
               <div className="space-y-8">
                 {[
                   {
-                    title: "Intelligent Ground Vehicle",
-                    role: "Mechanical Subsystem Lead, Cyborg Robotics Club",
-                    period: "Dec 2022 - Present",
+                    title: "Machine Dynamics and Robotics Lab",
+                    role: "Research project under Dr. DRk Parhi",
+                    period: "May 2024 - Present",
                     description:
-                      "Led the design and fabrication of a chassis for an intelligent ground vehicle, ensuring compliance with competition standards. Utilized SolidWorks for 3D modeling and ANSYS for structural simulations, optimizing strength, weight, and cost. Managed manufacturing via 3D printing, welding, and laser cutting, coordinating with vendors for component procurement.",
+                      "Focus on designing and optimizing a five-thruster single-body AUV using SolidWorks for 3D modeling and ANSYS for simulating thruster performance. Aim to maximize thrust efficiency and minimize heat generation in ESC and motor units. Conduct a detailed analysis of thruster performance factors, including blade number, shape, angle, and propellerdiameter. Author a research paper on methodologies to enhance propulsion systems and improve thermal management.",
                   },
                   {
-                    title: "6 DOF Mechanical Arm",
-                    role: "Mechanical Design Engineer, Cyborg Robotics Club",
-                    period: "Mar 2024 - Present",
+                    title: "TRIDENT GROUPS",
+                    role: "Graduate Engineer Trainee",
+                    period: "May 2024 - July 2024",
                     description:
-                      "Engineered a 3 DOF mechanical arm for automation tasks, focusing on structural and dynamic analysis using ANSYS. Performed motor calculations in MATLAB to determine torque and speed requirements, selecting high-precision joints and motors with encoders to ensure smooth operation.",
+                      `Developed a mechanical solution to enhance the Texpa lock stitching machine's efficiency by automatically actuating the machine to backtrack and eliminate dead ends caused by thread changes every 50-60 meters (approximately every minute). This mechanism prevents stitching gaps, reducing seam failure rates by over 90%, and ensures consistent stitching across 100% of the finished products. The solution minimizes manual intervention by 80%, improving overall production efficiency and enhancing the durability of textile products.`,
                   },
                   {
-                    title: "6-Wheeled Rover",
-                    role: "Lead Designer and Researcher, Cyborg Robotics Club",
-                    period: "Jan 2023 - Sep 2023",
+                    title: "IOCL PARADIP REFINERY",
+                    role: "Graduate Engineer Trainee",
+                    period: "May 2023 -July 2023",
                     description:
-                      "Led the design and research of a 6-wheeled rover optimized for rocky terrains, using SolidWorks for design and MATLAB for motor calculations. Implemented a rocker-bogie suspension system and differential mechanism for enhanced stability and maneuverability.",
-                  },
-                  {
-                    title: "Holonomic Art Bot",
-                    role: "Design Engineer, Cyborg Robotics Club",
-                    period: "Aug 2022 - Mar 2023",
-                    description:
-                      "Engineered and optimized the chassis for a 3-wheeled holonomic drive bot for precise floor drawing tasks, using SolidWorks for design and MATLAB for power and torque calculations. Ensured structural integrity and weight distribution for seamless integration with electronics.",
-                  },
-                  {
-                    title: "Hexapod",
-                    role: "Design and Manufacturing Lead, Cyborg Robotics Club",
-                    period: "Jan 2023 - Aug 2023",
-                    description:
-                      "Designed a hexapod robot optimized for stable locomotion across diverse terrains, using SolidWorks for design and analysis. Led manufacturing using 3D printing and integrated servo motors and control systems for synchronized leg movement.",
-                  },
-                  {
-                    title: "Rubik's Cube Solver",
-                    role: "Design Engineer, Cyborg Robotics Club",
-                    period: "Aug 2022 - Feb 2023",
-                    description:
-                      "Engineered a Rubik's Cube solver with precise mechanical design using SolidWorks. Conducted calculations for motor torque, gear ratios, and actuator movements, integrating adjustable grips and sensors for compatibility with various cube sizes.",
+                      "Gained hands-on experience in refinery operations and mechanical processes at IOCL. Analyzed and documented various types of mechanical seals, detailing their importance, differences, and maintenance procedures. Prepared a comprehensive report on mechanical seals, contributing to safety and efficiency improvements. Collaborated with the maintenance team, enhancing knowledge of equipment upkeep and refinery project planning.",
                   },
                 ].map((exp, index) => (
                   <motion.div
