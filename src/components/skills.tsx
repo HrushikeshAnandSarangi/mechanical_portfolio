@@ -1,575 +1,605 @@
-// "use client"
-// import { useRef, useEffect, useState } from "react"
-// import { Cpu, Database, Code, Activity, Settings, Users, Star, GitMerge } from "lucide-react"
-// import type Matter from "matter-js"
+"use client"
 
-// // Define types for Matter.js
-// declare module 'matter-js' {
-//   interface Body {
-//     skillIndex?: number;
-//   }
-// }
+import { useState, useRef } from "react"
+import { motion, useInView, AnimatePresence } from "framer-motion"
+import {
+  Code,
+  Cpu,
+  Cog,
+  Monitor,
+  PenToolIcon as ToolIcon,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
+  Thermometer,
+  Droplet,
+} from "lucide-react"
 
-// type MatterBody = Matter.Body
-// type MatterEngine = Matter.Engine
-// type MatterRender = Matter.Render
-// type MatterMouseConstraint = Matter.MouseConstraint
-// type MatterComposite = Matter.Composite
+// Skill categories and items
+const skillCategories = [
+  {
+    name: "Programming Languages",
+    icon: <Code className="w-5 h-5" />,
+    color: "bg-blue-50/[0.8] border-blue-200/[0.5] text-blue-600",
+    skills: [
+      { name: "Python", proficiency: 85 },
+      { name: "C++", proficiency: 75 },
+    ],
+  },
+  {
+    name: "Operating Systems",
+    icon: <Monitor className="w-5 h-5" />,
+    color: "bg-purple-50/[0.8] border-purple-200/[0.5] text-purple-600",
+    skills: [
+      { name: "Linux", proficiency: 80 },
+      { name: "Windows", proficiency: 90 },
+    ],
+  },
+  {
+    name: "Software Tools",
+    icon: <ToolIcon className="w-5 h-5" />,
+    color: "bg-pink-50/[0.8] border-pink-200/[0.5] text-pink-600",
+    skills: [
+      { name: "ROS", proficiency: 75 },
+      { name: "AutoCAD", proficiency: 85 },
+      { name: "Matlab", proficiency: 80 },
+      { name: "OnShape", proficiency: 70 },
+      { name: "Ansys", proficiency: 90 },
+      { name: "SolidWorks", proficiency: 95 },
+      { name: "Arduino", proficiency: 85 },
+    ],
+  },
+  {
+    name: "Mechanical Design",
+    icon: <Cog className="w-5 h-5" />,
+    color: "bg-teal-50/[0.8] border-teal-200/[0.5] text-teal-600",
+    skills: [
+      { name: "Strength of Materials", proficiency: 90 },
+      { name: "Machine Design", proficiency: 95 },
+      { name: "CAD/CAM", proficiency: 85 },
+      { name: "Product Design and Development", proficiency: 80 },
+    ],
+  },
+  {
+    name: "Thermal Sciences",
+    icon: <Thermometer className="w-5 h-5" />,
+    color: "bg-yellow-50/[0.8] border-yellow-200/[0.5] text-yellow-600",
+    skills: [
+      { name: "Thermodynamics", proficiency: 85 },
+      { name: "Heat Transfer", proficiency: 80 },
+      { name: "Refrigeration and Air Conditioning", proficiency: 75 },
+    ],
+  },
+  {
+    name: "Fluid Mechanics",
+    icon: <Droplet className="w-5 h-5" />,
+    color: "bg-blue-50/[0.8] border-blue-200/[0.5] text-blue-600",
+    skills: [
+      { name: "Fluid Mechanics", proficiency: 85 },
+      { name: "Computational Fluid Dynamics (CFD)", proficiency: 80 },
+    ],
+  },
+  {
+    name: "Simulation & Analysis",
+    icon: <BarChart3 className="w-5 h-5" />,
+    color: "bg-purple-50/[0.8] border-purple-200/[0.5] text-purple-600",
+    skills: [
+      { name: "Finite Element Analysis (FEA)", proficiency: 90 },
+      { name: "3D Modeling and Simulation", proficiency: 95 },
+    ],
+  },
+  {
+    name: "Robotics",
+    icon: <Cpu className="w-5 h-5" />,
+    color: "bg-pink-50/[0.8] border-pink-200/[0.5] text-pink-600",
+    skills: [
+      { name: "Robot Kinematics", proficiency: 85 },
+      { name: "Autonomous Systems", proficiency: 80 },
+      { name: "Sensor Integration", proficiency: 75 },
+    ],
+  },
+]
 
-// interface Skill {
-//   name: string;
-//   shape: string;
-//   icon: React.ReactNode;
-//   color: string;
-//   description: string;
-// }
+// Skill level descriptions
+const skillLevelDescriptions = [
+  { range: [0, 40], label: "Beginner", description: "Fundamental awareness and basic understanding" },
+  { range: [41, 70], label: "Intermediate", description: "Practical application and working knowledge" },
+  { range: [71, 85], label: "Advanced", description: "Applied theory and detailed understanding" },
+  { range: [86, 100], label: "Expert", description: "Recognized authority with deep expertise" },
+]
 
-// const SkillsPage: React.FC = () => {
-//   const containerRef = useRef<HTMLDivElement>(null)
-//   const canvasRef = useRef<HTMLCanvasElement>(null)
-//   const requestRef = useRef<number | null>(null)
-//   const [selectedSkill, setSelectedSkill] = useState<number | null>(null)
-//   const [hoveredSkill, setHoveredSkill] = useState<number | null>(null)
-//   const [gravity, setGravity] = useState<number>(0)
-//   const [isMobile, setIsMobile] = useState<boolean>(false)
-//   const [isInitialized, setIsInitialized] = useState<boolean>(false)
-//   const [debugInfo, setDebugInfo] = useState<string>("")
-//   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 })
+// Get skill level description based on proficiency
+const getSkillLevel = (proficiency: number) => {
+  return (
+    skillLevelDescriptions.find((level) => proficiency >= level.range[0] && proficiency <= level.range[1]) ||
+    skillLevelDescriptions[0]
+  )
+}
 
-//   // Store Matter.js objects in refs
-//   const engineRef = useRef<MatterEngine | null>(null)
-//   const renderRef = useRef<MatterRender | null>(null)
-//   const worldRef = useRef<MatterComposite | null>(null)
-//   const bodiesRef = useRef<MatterBody[]>([])
-//   const mouseConstraintRef = useRef<MatterMouseConstraint | null>(null)
-//   const wallsRef = useRef<MatterBody[]>([])
-//   const wallThickness = 50
+export default function SkillsSection() {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
+  const [hoveredSkill, setHoveredSkill] = useState<string | null>(null)
+  const skillsRef = useRef(null)
+  const isInView = useInView(skillsRef, { once: false, amount: 0.1 })
 
-//   const skills: Skill[] = [
-//     {
-//       name: "3D Modeling (SolidWorks)",
-//       shape: "square",
-//       icon: <Cpu size={24} />,
-//       color: "#4285F4",
-//       description: "Creating detailed 3D models and assemblies using SolidWorks for mechanical design.",
-//     },
-//     {
-//       name: "Finite Element Analysis (ANSYS)",
-//       shape: "circle",
-//       icon: <Activity size={24} />,
-//       color: "#EA4335",
-//       description: "Performing stress analysis, thermal studies, and structural simulations using ANSYS.",
-//     },
-//     {
-//       name: "Simulation and Analysis",
-//       shape: "triangle",
-//       icon: <GitMerge size={24} />,
-//       color: "#FBBC05",
-//       description: "Developing simulations to predict real-world behavior of mechanical systems.",
-//     },
-//     {
-//       name: "Robotics Design",
-//       shape: "pentagon",
-//       icon: <Settings size={24} />,
-//       color: "#34A853",
-//       description: "Designing robotic systems including mechanical structures, control systems, and integration.",
-//     },
-//     {
-//       name: "Manufacturing Techniques",
-//       shape: "hexagon",
-//       icon: <Database size={24} />,
-//       color: "#7B68EE",
-//       description: "Knowledge of various manufacturing processes including CNC machining, 3D printing, and injection molding.",
-//     },
-//     {
-//       name: "Project Management",
-//       shape: "octagon",
-//       icon: <Users size={24} />,
-//       color: "#FF7043",
-//       description: "Leading engineering projects from concept to completion, managing timelines and resources.",
-//     },
-//     {
-//       name: "Team Leadership",
-//       shape: "star",
-//       icon: <Star size={24} />,
-//       color: "#9C27B0",
-//       description: "Building and leading effective technical teams, fostering collaboration and innovation.",
-//     },
-//     {
-//       name: "Programming (MATLAB)",
-//       shape: "diamond",
-//       icon: <Code size={24} />,
-//       color: "#00BCD4",
-//       description: "Developing algorithms and analysis tools using MATLAB for engineering applications.",
-//     },
-//   ]
+  // Filter skills based on search term and category
+  const filteredCategories = skillCategories.filter((category) => {
+    // Filter by selected category
+    if (selectedCategory && category.name !== selectedCategory) {
+      return false
+    }
 
-//   // Check if device is mobile
-//   useEffect(() => {
-//     const checkMobile = () => {
-//       setIsMobile(window.innerWidth < 768)
-//     }
-//     checkMobile()
-//     window.addEventListener("resize", checkMobile)
-//     return () => window.removeEventListener("resize", checkMobile)
-//   }, [])
+    // Filter by search term
+    if (searchTerm) {
+      return (
+        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.skills.some((skill) => skill.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    }
 
-//   // Track container size
-//   useEffect(() => {
-//     const updateSize = () => {
-//       if (containerRef.current) {
-//         const rect = containerRef.current.getBoundingClientRect()
-//         setContainerSize({ width: rect.width, height: rect.height })
-//       }
-//     }
-//     updateSize()
-//     window.addEventListener("resize", updateSize)
-//     return () => window.removeEventListener("resize", updateSize)
-//   }, [])
+    return true
+  })
 
-//   // Update walls and renderer on size change
-//   useEffect(() => {
-//     if (!engineRef.current || !worldRef.current || !renderRef.current) return
-//     if (containerSize.width <= 0 || containerSize.height <= 0) return
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
 
-//     const Matter = require('matter-js') // Safe to require here as initMatter ensures Matter.js is loaded
-//     // Remove old walls
-//     wallsRef.current.forEach((wall) => Matter.World.remove(worldRef.current, wall))
-//     // Create new walls
-//     const { width, height } = containerSize
-//     const newWalls = [
-//       Matter.Bodies.rectangle(width / 2, height + wallThickness / 2, width, wallThickness, {
-//         isStatic: true,
-//         render: { fillStyle: "transparent" },
-//       }),
-//       Matter.Bodies.rectangle(width / 2, -wallThickness / 2, width, wallThickness, {
-//         isStatic: true,
-//         render: { fillStyle: "transparent" },
-//       }),
-//       Matter.Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height, {
-//         isStatic: true,
-//         render: { fillStyle: "transparent" },
-//       }),
-//       Matter.Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, {
-//         isStatic: true,
-//         render: { fillStyle: "transparent" },
-//       }),
-//     ]
-//     wallsRef.current = newWalls
-//     Matter.Composite.add(worldRef.current, newWalls)
+  const categoryVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    },
+  }
 
-//     // Update render options
-//     renderRef.current.options.width = width
-//     renderRef.current.options.height = height
-//     if (renderRef.current.canvas) {
-//       renderRef.current.canvas.width = width
-//       renderRef.current.canvas.height = height
-//     }
-//   }, [containerSize])
+  const skillBarVariants = {
+    hidden: { width: 0 },
+    visible: (proficiency: number) => ({
+      width: `${proficiency}%`,
+      transition: {
+        duration: 1,
+        ease: "easeOut",
+      },
+    }),
+  }
 
-//   // Initialize Matter.js
-//   useEffect(() => {
-//     const initMatter = async () => {
-//       if (isInitialized || !containerRef.current || !canvasRef.current || containerSize.width <= 0 || containerSize.height <= 0) return
-//       try {
-//         const matterModule = await import('matter-js')
-//         const Matter = matterModule.default
-//         const { width, height } = containerSize
-//         const engine = Matter.Engine.create({ gravity: { x: 0, y: gravity } })
-//         engineRef.current = engine
-//         worldRef.current = engine.world
-//         const render = Matter.Render.create({
-//           element: containerRef.current,
-//           engine: engine,
-//           canvas: canvasRef.current,
-//           options: {
-//             width,
-//             height,
-//             wireframes: false,
-//             background: "transparent",
-//             pixelRatio: window.devicePixelRatio || 1,
-//           },
-//         })
-//         renderRef.current = render
-//         const skillSize = isMobile ? 60 : 80
-//         const bodies: MatterBody[] = []
-//         const cols = isMobile ? 2 : 4
-//         const rows = Math.ceil(skills.length / cols)
-//         const cellWidth = width / cols
-//         const cellHeight = height / rows
-//         skills.forEach((skill, index) => {
-//           const col = index % cols
-//           const row = Math.floor(index / cols)
-//           const x = col * cellWidth + cellWidth / 2
-//           const y = row * cellHeight + cellHeight / 2
-//           let body
-//           switch (skill.shape) {
-//             case "circle":
-//               body = Matter.Bodies.circle(x, y, skillSize / 2, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             case "square":
-//               body = Matter.Bodies.rectangle(x, y, skillSize, skillSize, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             case "triangle":
-//               body = Matter.Bodies.polygon(x, y, 3, skillSize / 1.5, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             case "pentagon":
-//               body = Matter.Bodies.polygon(x, y, 5, skillSize / 2, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             case "hexagon":
-//               body = Matter.Bodies.polygon(x, y, 6, skillSize / 2, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             case "octagon":
-//               body = Matter.Bodies.polygon(x, y, 8, skillSize / 2, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             case "star":
-//               body = Matter.Bodies.circle(x, y, skillSize / 2, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: {
-//                   fillStyle: skill.color,
-//                   strokeStyle: "#FFFFFF",
-//                   lineWidth: 2,
-//                   sprite: { texture: createStarImage(skillSize, skill.color), xScale: 1, yScale: 1 },
-//                 },
-//               })
-//               break
-//             case "diamond":
-//               body = Matter.Bodies.rectangle(x, y, skillSize, skillSize, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 angle: Math.PI / 4,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//               break
-//             default:
-//               body = Matter.Bodies.rectangle(x, y, skillSize, skillSize, {
-//                 restitution: 0.8,
-//                 friction: 0.01,
-//                 frictionAir: 0.001,
-//                 render: { fillStyle: skill.color, strokeStyle: "#FFFFFF", lineWidth: 2 },
-//               })
-//           }
-//           body.skillIndex = index
-//           body.label = skill.name
-//           Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 4, y: (Math.random() - 0.5) * 4 })
-//           Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05)
-//           bodies.push(body)
-//         })
-//         Matter.Composite.add(engine.world, bodies)
-//         bodiesRef.current = bodies
-//         const mouse = Matter.Mouse.create(render.canvas)
-//         const mouseConstraint = Matter.MouseConstraint.create(engine, {
-//           mouse: mouse,
-//           constraint: { stiffness: 0.2, render: { visible: false } },
-//         })
-//         mouseConstraintRef.current = mouseConstraint
-//         Matter.Composite.add(engine.world, mouseConstraint)
-//         render.mouse = mouse
-//         Matter.Events.on(mouseConstraint, "mousedown", (event) => {
-//           const mousePosition = event.mouse.position
-//           const foundPhysics = Matter.Query.point(bodies, mousePosition)
-//           if (foundPhysics.length > 0) {
-//             const body = foundPhysics[0]
-//             if (typeof body.skillIndex === 'number') {
-//               setSelectedSkill(body.skillIndex)
-//             }
-//           } else {
-//             setSelectedSkill(null)
-//           }
-//         })
-//         Matter.Events.on(mouseConstraint, "mousemove", (event) => {
-//           const mousePosition = event.mouse.position
-//           const foundPhysics = Matter.Query.point(bodies, mousePosition)
-//           if (foundPhysics.length > 0) {
-//             const body = foundPhysics[0]
-//             if (typeof body.skillIndex === 'number') {
-//               setHoveredSkill(body.skillIndex)
-//             }
-//           } else {
-//             setHoveredSkill(null)
-//           }
-//         })
-//         Matter.Events.on(engine, 'collisionStart', (event) => {
-//           const pairs = event.pairs
-//           for (let i = 0; i < pairs.length; i++) {
-//             const pair = pairs[i]
-//             if (pair.bodyA.isStatic || pair.bodyB.isStatic) continue
-//             if (Math.random() > 0.7) {
-//               const bodyToAdjust = Math.random() > 0.5 ? pair.bodyA : pair.bodyB
-//               const forceX = (Math.random() - 0.5) * 0.002
-//               const forceY = (Math.random() - 0.5) * 0.002
-//               Matter.Body.applyForce(bodyToAdjust, bodyToAdjust.position, { x: forceX, y: forceY })
-//             }
-//           }
-//         })
-//         Matter.Runner.run(Matter.Runner.create(), engine)
-//         Matter.Render.run(render)
-//         const addRandomForces = () => {
-//           if (!bodiesRef.current || !engineRef.current) return
-//           bodiesRef.current.forEach((body: MatterBody) => {
-//             if (Math.random() > 0.95) {
-//               const forceX: number = (Math.random() - 0.5) * 0.001
-//               const forceY: number = (Math.random() - 0.5) * 0.001
-//               Matter.Body.applyForce(body, body.position, { x: forceX, y: forceY })
-//             }
-//           })
-//           setTimeout(addRandomForces, 500)
-//         }
-//         addRandomForces()
-//         setIsInitialized(true)
-//         setDebugInfo("Physics initialized successfully")
-//       } catch (error) {
-//         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
-//         setDebugInfo(`Error: ${errorMessage}`)
-//         console.error("Matter.js initialization error:", error)
-//       }
-//     }
-//     initMatter()
-//     return () => {
-//       if (requestRef.current) {
-//         cancelAnimationFrame(requestRef.current)
-//       }
-//       if (renderRef.current) {
-//         if (renderRef.current.canvas) {
-//           renderRef.current.canvas.remove()
-//         }
-//         if (renderRef.current.textures) {
-//           for (const texture in renderRef.current.textures) {
-//             renderRef.current.textures[texture].remove && renderRef.current.textures[texture].remove()
-//           }
-//         }
-//       }
-//       if (engineRef.current && worldRef.current) {
-//         // Handle Matter.js cleanup synchronously
-//         void import('matter-js').then(matterModule => {
-//           const Matter = matterModule.default
-//           Matter.Composite.clear(worldRef.current!, false)
-//           Matter.Engine.clear(engineRef.current!)
-//         })
-//       }
-//     }
-//   }, [containerSize, gravity, isInitialized, isMobile])
+  // Handle category toggle
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategory(expandedCategory === categoryName ? null : categoryName)
+  }
 
-//   // Update gravity
-//   useEffect(() => {
-//     if (engineRef.current) {
-//       engineRef.current.gravity.y = gravity
-//       setDebugInfo(`Gravity updated to ${gravity}`)
-//     }
-//   }, [gravity])
+  // Gear animation for engineering theme
+  const gearVariants = {
+    animate: {
+      rotate: 360,
+      transition: {
+        duration: 20,
+        repeat: Number.POSITIVE_INFINITY,
+        ease: "linear",
+      },
+    },
+  }
 
-//   // Create star image
-//   const createStarImage = (size: number, color: string): string => {
-//     const canvas = document.createElement('canvas')
-//     canvas.width = size
-//     canvas.height = size
-//     const ctx = canvas.getContext('2d')
-//     if (!ctx) return ''
-//     ctx.beginPath()
-//     ctx.fillStyle = color
-//     const outerRadius = size / 2
-//     const innerRadius = outerRadius / 2
-//     const centerX = size / 2
-//     const centerY = size / 2
-//     const spikes = 5
-//     let rot = Math.PI / 2 * 3
-//     let x = centerX
-//     let y = centerY
-//     const step = Math.PI / spikes
-//     ctx.beginPath()
-//     ctx.moveTo(centerX, centerY - outerRadius)
-//     for (let i = 0; i < spikes; i++) {
-//       x = centerX + Math.cos(rot) * outerRadius
-//       y = centerY + Math.sin(rot) * outerRadius
-//       ctx.lineTo(x, y)
-//       rot += step
-//       x = centerX + Math.cos(rot) * innerRadius
-//       y = centerY + Math.sin(rot) * innerRadius
-//       ctx.lineTo(x, y)
-//       rot += step
-//     }
-//     ctx.lineTo(centerX, centerY - outerRadius)
-//     ctx.closePath()
-//     ctx.fillStyle = color
-//     ctx.fill()
-//     ctx.strokeStyle = "#FFFFFF"
-//     ctx.lineWidth = 2
-//     ctx.stroke()
-//     return canvas.toDataURL()
-//   }
+  return (
+    <section className="relative py-16 px-4 overflow-hidden bg-white" ref={skillsRef}>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Blueprint grid */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzJiNmNiMiIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuMDUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]" />
 
-//   // Handle explosion
-//   const handleExplode = async () => {
-//     if (!engineRef.current || !bodiesRef.current.length) return
-//     const matterModule = await import('matter-js')
-//     const Matter = matterModule.default
-//     bodiesRef.current.forEach((body) => {
-//       if (!containerRef.current) return
-//       const centerX = containerRef.current.clientWidth / 2
-//       const centerY = containerRef.current.clientHeight / 2
-//       const forceX = (body.position.x - centerX) * 0.0015
-//       const forceY = (body.position.y - centerY) * 0.0015
-//       Matter.Body.applyForce(body, body.position, { x: forceX, y: forceY })
-//     })
-//     setDebugInfo("Explosion applied")
-//   }
+        {/* Decorative elements */}
+        <motion.div
+          className="absolute w-96 h-96 rounded-full bg-blue-100/10 blur-3xl -top-48 -right-48"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.2, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+        />
 
-//   // Handle reset
-//   const handleReset = async () => {
-//     if (!engineRef.current || !bodiesRef.current.length || !containerRef.current) return
-//     const matterModule = await import('matter-js')
-//     const Matter = matterModule.default
-//     const width = containerRef.current.clientWidth
-//     const height = containerRef.current.clientHeight
-//     const cols = isMobile ? 2 : 4
-//     const rows = Math.ceil(skills.length / cols)
-//     const cellWidth = width / cols
-//     const cellHeight = height / rows
-//     bodiesRef.current.forEach((body, index) => {
-//       const col = index % cols
-//       const row = Math.floor(index / cols)
-//       const x = col * cellWidth + cellWidth / 2
-//       const y = row * cellHeight + cellHeight / 2
-//       Matter.Body.setPosition(body, { x, y })
-//       Matter.Body.setVelocity(body, { x: 0, y: 0 })
-//       Matter.Body.setAngularVelocity(body, 0)
-//       setTimeout(() => {
-//         Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 4, y: (Math.random() - 0.5) * 4 })
-//         Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05)
-//       }, 100)
-//     })
-//     setDebugInfo("Positions reset")
-//   }
+        <motion.div
+          className="absolute w-96 h-96 rounded-full bg-purple-100/10 blur-3xl -bottom-48 -left-48"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.3, 0.2, 0.3],
+          }}
+          transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut", delay: 2 }}
+        />
 
-//   // Render shape legend
-//   const renderShapeLegend = (): React.ReactNode => {
-//     const uniqueShapes = Array.from(new Set(skills.map((skill) => skill.shape)))
-//     return (
-//       <div className="bg-white bg-opacity-80 p-3 rounded-lg shadow-lg">
-//         <h3 className="text-sm font-bold mb-2">Shape Legend</h3>
-//         <div className="grid grid-cols-2 gap-2 text-xs">
-//           {uniqueShapes.map((shape) => {
-//             const skill = skills.find((s) => s.shape === shape)
-//             if (!skill) return null
-//             return (
-//               <div key={shape} className="flex items-center gap-1">
-//                 <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: skill.color }}></span>
-//                 <span>{shape.charAt(0).toUpperCase() + shape.slice(1)}</span>
-//               </div>
-//             )
-//           })}
-//         </div>
-//       </div>
-//     )
-//   }
+        {/* Engineering-themed background elements */}
+        <motion.div
+          className="absolute w-64 h-64 border-4 border-dashed border-blue-200/10 rounded-full top-[20%] right-[5%]"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 40, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        />
 
-//   return (
-//     <div className="flex flex-col items-center justify-center w-full min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 overflow-hidden p-4">
-//       <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center">Technical Skills</h1>
-//       <p className="text-gray-600 text-center mb-4">Drag, drop, and explore my engineering expertise</p>
-//       <div className="w-full max-w-4xl flex flex-wrap justify-center gap-2 mb-4">
-//         {skills.map((skill, index) => (
-//           <div
-//             key={index}
-//             className="flex items-center gap-1 bg-white bg-opacity-80 px-2 py-1 rounded-md text-xs md:text-sm"
-//             style={{ borderLeft: `4px solid ${skill.color}` }}
-//             onClick={() => setSelectedSkill(index === selectedSkill ? null : index)}
-//           >
-//             <span className="font-medium">{skill.shape.charAt(0).toUpperCase() + skill.shape.slice(1)}:</span>{" "}
-//             {skill.name}
-//           </div>
-//         ))}
-//       </div>
-//       <div
-//         ref={containerRef}
-//         className="relative w-full max-w-4xl h-[60vh] md:h-[70vh] border border-gray-200 rounded-xl overflow-hidden bg-white bg-opacity-30"
-//         style={{ touchAction: "none" }}
-//       >
-//         <canvas ref={canvasRef} className="absolute inset-0" />
-//         <div
-//           className={`absolute ${isMobile ? "bottom-4 left-4 right-4" : "top-4 left-4"} bg-white bg-opacity-90 p-3 rounded-lg text-gray-800 z-10 shadow-lg`}
-//         >
-//           <h2 className="text-sm md:text-base font-bold mb-2">Physics Controls</h2>
-//           <div className="mb-2">
-//             <label className="block text-xs md:text-sm mb-1">Gravity: {gravity.toFixed(1)}</label>
-//             <input
-//               type="range"
-//               min="-0.5"
-//               max="1"
-//               step="0.05"
-//               value={gravity}
-//               onChange={(e) => setGravity(Number.parseFloat(e.target.value))}
-//               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-//             />
-//           </div>
-//           <div className="flex gap-2">
-//             <button
-//               onClick={handleExplode}
-//               className="px-2 py-1 bg-amber-500 hover:bg-amber-600 rounded text-white text-xs md:text-sm transition-colors"
-//             >
-//               Explode!
-//             </button>
-//             <button
-//               onClick={handleReset}
-//               className="px-2 py-1 bg-teal-500 hover:bg-teal-600 rounded text-white text-xs md:text-sm transition-colors"
-//             >
-//               Reset
-//             </button>
-//           </div>
-//         </div>
-//         {!isMobile && <div className="absolute top-4 right-4 z-10">{renderShapeLegend()}</div>}
-//         {(hoveredSkill !== null || selectedSkill !== null) && (
-//           <div
-//             className={`absolute ${isMobile ? "top-4 left-4 right-4" : "bottom-4 right-4 w-64"} bg-white bg-opacity-90 p-3 rounded-lg text-gray-800 z-10 shadow-lg transition-all duration-300 ease-in-out`}
-//           >
-//             <div className="flex items-center gap-2 mb-1">
-//               <span className="p-1 rounded-full" style={{ backgroundColor: skills[selectedSkill || hoveredSkill || 0].color }}>
-//                 {skills[selectedSkill || hoveredSkill || 0].icon}
-//               </span>
-//               <h3 className="text-sm md:text-base font-bold">{skills[selectedSkill || hoveredSkill || 0].name}</h3>
-//             </div>
-//             <p className="text-xs md:text-sm">{skills[selectedSkill || hoveredSkill || 0].description}</p>
-//           </div>
-//         )}
-//       </div>
-//       <div className="mt-4 text-center text-sm text-gray-600">
-//         <p className="font-bold">👆 Drag shapes to interact. Adjust gravity to change behavior.</p>
-//       </div>
-//     </div>
-//   )
-// }
+        <motion.div
+          className="absolute w-72 h-72 border-4 border-purple-200/10 rounded-full bottom-[10%] left-[5%]"
+          variants={gearVariants}
+          animate="animate"
+        >
+          {/* Gear teeth */}
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-6 h-12 bg-purple-200/10"
+              style={{
+                transformOrigin: "center 144px",
+                transform: `rotate(${i * 36}deg)`,
+                left: "calc(50% - 12px)",
+                top: "-12px",
+              }}
+            />
+          ))}
+        </motion.div>
+      </div>
 
-// export default SkillsPage
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl font-bold text-gray-900 relative inline-block">
+            <span className="relative z-10">
+              Technical Skills
+              <motion.div
+                className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
+                initial={{ width: 0 }}
+                animate={isInView ? { width: "100%" } : { width: 0 }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            </span>
+          </h2>
+          <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+            Explore my technical expertise across mechanical engineering, robotics, and software development.
+          </p>
+        </motion.div>
+
+        {/* Search and Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-8 flex flex-col md:flex-row gap-4"
+        >
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search skills..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+
+          <select
+            value={selectedCategory || ""}
+            onChange={(e) => setSelectedCategory(e.target.value || null)}
+            className="px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all md:w-64"
+          >
+            <option value="">All Categories</option>
+            {skillCategories.map((category, index) => (
+              <option key={index} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </motion.div>
+
+        {/* Skill Level Legend */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-10 p-6 bg-white/[0.9] backdrop-blur-[8px] rounded-xl border border-blue-200/[0.5] shadow-lg"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Skill Proficiency Levels</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {skillLevelDescriptions.map((level, index) => (
+              <div key={index} className="flex items-center space-x-3">
+                <div className="w-16 h-3 rounded-full bg-gradient-to-r from-blue-200 to-blue-600 opacity-[0.2]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-600"
+                    style={{ width: `${level.range[1]}%` }}
+                  ></div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{level.label}</p>
+                  <p className="text-xs text-gray-500">{level.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Skills Categories */}
+        {filteredCategories.length > 0 ? (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            className="grid grid-cols-1 gap-6"
+          >
+            {filteredCategories.map((category, categoryIndex) => (
+              <motion.div
+                key={categoryIndex}
+                variants={categoryVariants}
+                className={`${category.color} backdrop-blur-[4px] rounded-xl border ${category.color.replace("bg-", "border-")} shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl`}
+              >
+                {/* Category Header */}
+                <div className="p-6 cursor-pointer" onClick={() => toggleCategory(category.name)}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${category.color}`}>{category.icon}</div>
+                      <h3 className="text-xl font-bold text-gray-900">{category.name}</h3>
+                    </div>
+                    <div>
+                      {expandedCategory === category.name ? (
+                        <ChevronUp className="text-gray-500" size={20} />
+                      ) : (
+                        <ChevronDown className="text-gray-500" size={20} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skills List */}
+                <AnimatePresence>
+                  {expandedCategory === category.name && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="px-6 pb-6"
+                    >
+                      <div className="space-y-6">
+                        {category.skills.map((skill, skillIndex) => (
+                          <div
+                            key={skillIndex}
+                            className="relative"
+                            onMouseEnter={() => setHoveredSkill(skill.name)}
+                            onMouseLeave={() => setHoveredSkill(null)}
+                          >
+                            <div className="flex justify-between items-center mb-2">
+                              <div className="flex items-center">
+                                <h4 className="text-base font-medium text-gray-900">{skill.name}</h4>
+                                {hoveredSkill === skill.name && (
+                                  <motion.span
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="ml-2 text-sm text-gray-500"
+                                  >
+                                    {skill.proficiency}%
+                                  </motion.span>
+                                )}
+                              </div>
+                              <span className="text-sm font-medium text-gray-700">
+                                {getSkillLevel(skill.proficiency).label}
+                              </span>
+                            </div>
+
+                            {/* Interactive Skill Bar */}
+                            <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden relative">
+                              <motion.div
+                                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-600 relative"
+                                variants={skillBarVariants}
+                                initial="hidden"
+                                animate="visible"
+                                custom={skill.proficiency}
+                              >
+                                {/* Animated particles for visual interest */}
+                                {hoveredSkill === skill.name && (
+                                  <>
+                                    <motion.div
+                                      className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full"
+                                      animate={{
+                                        x: [0, -10, 0],
+                                        opacity: [0, 1, 0],
+                                      }}
+                                      transition={{
+                                        duration: 1.5,
+                                        repeat: Number.POSITIVE_INFINITY,
+                                        ease: "easeInOut",
+                                      }}
+                                    />
+                                    <motion.div
+                                      className="absolute top-1 right-3 w-1 h-1 bg-white rounded-full"
+                                      animate={{
+                                        x: [0, -8, 0],
+                                        opacity: [0, 1, 0],
+                                      }}
+                                      transition={{
+                                        duration: 2,
+                                        repeat: Number.POSITIVE_INFINITY,
+                                        ease: "easeInOut",
+                                        delay: 0.3,
+                                      }}
+                                    />
+                                  </>
+                                )}
+                              </motion.div>
+                            </div>
+
+                            {/* Skill Detail Tooltip */}
+                            <AnimatePresence>
+                              {hoveredSkill === skill.name && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: 10 }}
+                                  className="absolute mt-2 p-3 bg-white rounded-lg shadow-lg border border-gray-200 z-10 w-full max-w-xs"
+                                >
+                                  <div className="text-sm">
+                                    <p className="font-medium text-gray-900 mb-1">
+                                      {getSkillLevel(skill.proficiency).label}
+                                    </p>
+                                    <p className="text-gray-600">{getSkillLevel(skill.proficiency).description}</p>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+            <p className="text-gray-500 text-lg">No skills match your search criteria. Try adjusting your filters.</p>
+          </motion.div>
+        )}
+
+        {/* Interactive Skill Visualization */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="mt-16 p-8 bg-white/[0.9] backdrop-blur-[8px] rounded-xl border border-blue-200/[0.5] shadow-xl relative overflow-hidden"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Skills Radar Chart</h3>
+
+          <div className="aspect-square max-w-2xl mx-auto relative">
+            {/* Radar Chart Background */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {[5, 4, 3, 2, 1].map((level) => (
+                <div
+                  key={level}
+                  className="absolute rounded-full border border-gray-200"
+                  style={{
+                    width: `${level * 20}%`,
+                    height: `${level * 20}%`,
+                    opacity: level * 0.15,
+                  }}
+                ></div>
+              ))}
+
+              {/* Radar Axes */}
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+                <div
+                  key={i}
+                  className="absolute h-1/2 w-px bg-gray-200 origin-bottom"
+                  style={{ transform: `rotate(${angle}deg)` }}
+                ></div>
+              ))}
+            </div>
+
+            {/* Radar Chart Data Points */}
+            <div className="absolute inset-0">
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                <defs>
+                  <linearGradient id="skillGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="50%" stopColor="#8b5cf6" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                </defs>
+
+                {/* Create polygon for each category */}
+                {skillCategories.map((category, categoryIndex) => {
+                  const avgProficiency =
+                    category.skills.reduce((sum, skill) => sum + skill.proficiency, 0) / category.skills.length
+                  const radius = (avgProficiency / 100) * 80 // 80% of the chart radius
+                  const angle = (categoryIndex * 360) / skillCategories.length
+                  const x = 100 + radius * Math.cos((angle - 90) * (Math.PI / 180))
+                  const y = 100 + radius * Math.sin((angle - 90) * (Math.PI / 180))
+
+                  return (
+                    <g key={categoryIndex}>
+                      <motion.circle
+                        cx={x}
+                        cy={y}
+                        r={4}
+                        fill="url(#skillGradient)"
+                        initial={{ r: 0 }}
+                        animate={{ r: 4 }}
+                        transition={{ duration: 0.5, delay: 0.1 * categoryIndex }}
+                      />
+                      <motion.line
+                        x1={100}
+                        y1={100}
+                        x2={x}
+                        y2={y}
+                        stroke="url(#skillGradient)"
+                        strokeWidth={2}
+                        strokeOpacity={0.7}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 1, delay: 0.1 * categoryIndex }}
+                      />
+                      <motion.text
+                        x={x + (x > 100 ? 10 : -10)}
+                        y={y}
+                        textAnchor={x > 100 ? "start" : "end"}
+                        alignmentBaseline="middle"
+                        fontSize={10}
+                        fill="#4b5563"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.5 + 0.1 * categoryIndex }}
+                      >
+                        {category.name}
+                      </motion.text>
+                    </g>
+                  )
+                })}
+
+                {/* Connect the dots to form a polygon */}
+                <motion.polygon
+                  points={skillCategories
+                    .map((category, categoryIndex) => {
+                      const avgProficiency =
+                        category.skills.reduce((sum, skill) => sum + skill.proficiency, 0) / category.skills.length
+                      const radius = (avgProficiency / 100) * 80
+                      const angle = (categoryIndex * 360) / skillCategories.length
+                      const x = 100 + radius * Math.cos((angle - 90) * (Math.PI / 180))
+                      const y = 100 + radius * Math.sin((angle - 90) * (Math.PI / 180))
+                      return `${x},${y}`
+                    })
+                    .join(" ")}
+                  fill="url(#skillGradient)"
+                  fillOpacity={0.2}
+                  stroke="url(#skillGradient)"
+                  strokeWidth={1}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 1 }}
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center text-gray-600">
+            <p>
+              This radar chart visualizes my skill proficiency across different categories. Hover over skill bars for
+              detailed information.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}

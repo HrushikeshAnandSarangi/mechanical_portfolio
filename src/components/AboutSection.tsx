@@ -4,31 +4,10 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { User, GraduationCap, Briefcase, Award, Users, MapPin } from "lucide-react"
-import dynamic from "next/dynamic"
-const L: { Icon?: typeof Icon } = typeof window !== "undefined" ? window.L : {}
+import { User, GraduationCap, Briefcase, Award, Users } from "lucide-react"
 import { useSectionInView } from "../hooks/useSection"
 
-// Dynamically import Leaflet components to avoid SSR issues
-const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false })
-const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false })
-const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false })
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false })
 
-// Import Leaflet CSS
-import "leaflet/dist/leaflet.css"
-import type { Icon } from "leaflet"
-// Define custom marker icon to fix the marker issue
-const customIcon = (typeof window !== "undefined" && L && L.Icon)
-  ? new L.Icon({
-      iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41],
-      shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-    })
-  : undefined
 
 interface Section {
   id: string
@@ -47,7 +26,6 @@ const sections: Section[] = [
 const AboutSection: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<L.Map | null>(null)
 
   // Track section visibility with refs
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({
@@ -74,15 +52,6 @@ const AboutSection: React.FC = () => {
       window.removeEventListener("resize", checkIfMobile)
     }
   }, [])
-
-  // Ensure map renders correctly
-  useEffect(() => {
-    if (mapRef.current) {
-      setTimeout(() => {
-        mapRef.current?.invalidateSize()
-      }, 300)
-    }
-  }, [activeSection])
 
   // Scroll to section on click
   const scrollToSection = (id: string) => {
@@ -385,41 +354,6 @@ const AboutSection: React.FC = () => {
                     My experience includes designing and fabricating components for intelligent ground vehicles and
                     mechanical arms, using tools like SolidWorks and ANSYS.
                   </p>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                >
-                  <h4 className="text-xl font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <MapPin size={24} className="text-blue-600" /> Location
-                  </h4>
-                  <p className="text-gray-700 text-lg mb-4">NIT Rourkela, Odisha, India</p>
-                  <div className="h-64 sm:h-80 w-full rounded-lg overflow-hidden border border-gray-200/50 backdrop-blur-lg shadow-md">
-                    {typeof window !== "undefined" && (
-                      <MapContainer
-                        center={[22.2528, 84.9016]}
-                        zoom={15}
-                        style={{ height: "100%", width: "100%" }}
-                        className="z-10"
-                        ref={mapRef}
-                        whenReady={() => {
-                          mapRef.current?.invalidateSize()
-                        }}
-                      >
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        />
-                        <Marker
-                          position={[22.2528, 84.9016]}
-                          icon={customIcon}
-                        >
-                          <Popup>NIT Rourkela</Popup>
-                        </Marker>
-                      </MapContainer>
-                    )}
-                  </div>
                 </motion.div>
               </div>
             </motion.div>
