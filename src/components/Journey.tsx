@@ -366,7 +366,7 @@ export default function HeroSection() {
                 Shantanu Panda
               </span>
             </h2>
-            <h3 className="text-xl text-gray-700 mb-4 font-medium">Mechatronics Engineer & Robotics Enthusiast</h3>
+            <h3 className="text-xl text-gray-700 mb-4 font-medium">Mechanical Engineer & Robotics Enthusiast</h3>
             <p className="text-gray-700 mb-6 leading-relaxed">
               With a B.Tech in Mechanical Engineering from NIT Rourkela, I craft robotic systems that push
               boundaries. From leading the Cyborg Robotics Club to designing a 6-wheeled rover that conquers rugged
