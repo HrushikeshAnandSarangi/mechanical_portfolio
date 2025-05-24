@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { motion, useInView, AnimatePresence } from "framer-motion"
-import { Download, ExternalLink, ChevronDown, ChevronUp, Search, Code, Cpu, Cog, PenToolIcon as Tool, CheckCircle, Lightbulb } from 'lucide-react'
+import { Download, ExternalLink, ChevronDown, ChevronUp, Search, Code, Cpu, Cog, Wrench, CheckCircle, Lightbulb} from 'lucide-react'
 
 
 interface Project {
@@ -16,6 +16,8 @@ interface Project {
   icon: React.ElementType
   color: string
   iconColor: string
+  imageUrl?: string // Optional image URL
+  caseStudyUrl?: string // Optional case study URL
 }
 
 const projects: Project[] = [
@@ -30,6 +32,8 @@ const projects: Project[] = [
     icon: Cpu,
     color: "bg-blue-50/[0.8] border-blue-200/[0.5]",
     iconColor: "text-blue-600",
+    imageUrl: "https://res.cloudinary.com/dk6m1qejk/image/upload/v1748074372/Screenshot_315_gmo2my.png",
+    caseStudyUrl: "https://drive.google.com/drive/folders/1wCVdfAMQjmGghKSOILuFmfd7miBlutFb?usp=drive_link"
   },
   {
     name: "6 DOF Mechanical Arm",
@@ -39,9 +43,11 @@ const projects: Project[] = [
     technologies: "ANSYS (structural, static, and dynamic analysis), MATLAB (motor calculations), high-precision joints, motors with encoders.",
     details: "Performed detailed motor calculations in MATLAB to determine torque and speed requirements, selected appropriate motors and high-precision joints to minimize backlash, and ensured smooth operation and high precision in automated processes. Carefully selected materials to enhance strength-to-weight ratio and durability.",
     outcome: "Achieved high precision and reliability in automation tasks through optimized design and component selection.",
-    icon: Tool,
+    icon: Wrench,
     color: "bg-purple-50/[0.8] border-purple-200/[0.5]",
     iconColor: "text-purple-600",
+    imageUrl: "https://res.cloudinary.com/dk6m1qejk/image/upload/v1748074370/Screenshot_44_cnmz9r.png",
+    caseStudyUrl: "https://drive.google.com/drive/folders/1m9Nk0sIw-ZliVAU87z9F4gklI7sjTueG?usp=drive_link"
   },
   {
     name: "6-Wheeled ROVER",
@@ -54,6 +60,8 @@ const projects: Project[] = [
     icon: Cog,
     color: "bg-pink-50/[0.8] border-pink-200/[0.5]",
     iconColor: "text-pink-600",
+    imageUrl: "https://res.cloudinary.com/dk6m1qejk/image/upload/v1748074370/bot_1_oz7v86.jpg",
+    caseStudyUrl: "https://drive.google.com/drive/folders/1MfR1LRlJOT2o_YhZENkAFsAh5GdnK_aX?usp=drive_link"
   },
   {
     name: "Holonomic Art Bot",
@@ -66,6 +74,8 @@ const projects: Project[] = [
     icon: Lightbulb,
     color: "bg-teal-50/[0.8] border-teal-200/[0.5]",
     iconColor: "text-teal-600",
+    imageUrl: "https://res.cloudinary.com/dk6m1qejk/image/upload/v1748074369/1_cxsx4y.png",
+    caseStudyUrl: "https://drive.google.com/drive/folders/1Wg_oEuZJPwJ5gysVHFHSQFRwWVNEdb0L?usp=drive_link"
   },
   {
     name: "HEXAPOD",
@@ -78,6 +88,8 @@ const projects: Project[] = [
     icon: Code,
     color: "bg-yellow-50/[0.8] border-yellow-200/[0.5]",
     iconColor: "text-yellow-600",
+    imageUrl: "https://res.cloudinary.com/dk6m1qejk/image/upload/v1748074369/4_ln0cii.jpg",
+    caseStudyUrl: "https://drive.google.com/drive/folders/18NwDEGbP7i7M2ruZJL4HlWbj6CRs0ZKj?usp=drive_link"
   },
   {
     name: "Rubics Cube Solver",
@@ -90,6 +102,8 @@ const projects: Project[] = [
     icon: CheckCircle,
     color: "bg-blue-50/[0.8] border-blue-200/[0.5]",
     iconColor: "text-blue-600",
+    imageUrl: "https://res.cloudinary.com/dk6m1qejk/image/upload/v1748075995/OIP_a1xneg.jpg",
+    caseStudyUrl: "https://drive.google.com/drive/folders/1MsNjiuADZHBA-fu8bpASOU_XliY6s-8n?usp=drive_link"
   },
 ]
 
@@ -307,9 +321,27 @@ const ExploreProjects: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Project Image Placeholder */}
+                  {/* Dynamic Project Image */}
                   <div className="relative h-48 overflow-hidden">
-                    <div className={`absolute inset-0 flex items-center justify-center ${index % 2 === 0 ? 'bg-blue-100/50' : 'bg-purple-100/50'}`}>
+                    {project.imageUrl ? (
+                      <img 
+                        src={project.imageUrl} 
+                        alt={`${project.name} project`}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          // Fallback to placeholder if image fails to load
+                          e.currentTarget.style.display = 'none';
+                          const nextSibling = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (nextSibling) nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    
+                    {/* Fallback placeholder */}
+                    <div 
+                      className={`${project.imageUrl ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center ${index % 2 === 0 ? 'bg-blue-100/50' : 'bg-purple-100/50'}`}
+                      style={project.imageUrl ? { display: 'none' } : {}}
+                    >
                       <span className="text-gray-500 font-medium">Project Image</span>
                     </div>
                     
@@ -365,13 +397,18 @@ const ExploreProjects: React.FC = () => {
                               <p className="text-gray-700 text-sm">{project.outcome}</p>
                             </div>
                             
-                            <a
-                              href="#"
-                              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-                            >
-                              <span>View Full Case Study</span>
-                              <ExternalLink size={14} />
-                            </a>
+                            {/* Dynamic Case Study Link */}
+                            {project.caseStudyUrl && (
+                              <a
+                                href={project.caseStudyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                              >
+                                <span>Explore my CAD designs.</span>
+                                <ExternalLink size={14} />
+                              </a>
+                            )}
                           </div>
                         </motion.div>
                       )}
